@@ -1,7 +1,7 @@
 import numpy as np
 import torch as T
 from deep_q_network import DeepQNetwork
-from DQN.replay_memory import ReplayBuffer
+from replay_memory import ReplayBuffer
 
 
 class DQNAgent(object):

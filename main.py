@@ -1,6 +1,6 @@
-from DQN.dqn_agent import DQNAgent
-from DQN.trainer import Trainer
-from DQN.utils import make_env
+from dqn_agent import DQNAgent
+from trainer import Trainer
+from utils import make_env
 
 
 if __name__ == '__main__':

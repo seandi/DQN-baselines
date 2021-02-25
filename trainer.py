@@ -3,8 +3,8 @@ from typing import Optional, List, Tuple
 import numpy as np
 from gym import Env
 
-from DQN.dqn_agent import DQNAgent
-from DQN.replay_memory import ReplayBuffer
+from dqn_agent import DQNAgent
+from replay_memory import ReplayBuffer
 
 
 class Trainer:
