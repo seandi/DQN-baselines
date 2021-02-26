@@ -44,6 +44,9 @@ class Trainer:
         self.epsilon_decay_factor: int = epsilon_decay_factor  # Exponential decay
 
     def update_epsilon(self):
+        if self.interaction_steps >= self.epsilon_decay_period:
+            return
+
         if self.interaction_steps == 0:
             self.epsilon = self.epsilon_start
             self.epsilon_step = (self.epsilon_start - self.epsilon_min) / self.epsilon_decay_period
