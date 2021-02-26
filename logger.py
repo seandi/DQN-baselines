@@ -13,7 +13,8 @@ FORMAT_CONFIG = {
         'train': [
             ('episode', 'E', 'int'), ('step', 'S', 'int'),
             ('duration', 'D', 'time'), ('episode_reward', 'R', 'float'),
-            ('policy_net_loss', 'AVG_LOSS', 'float')
+            ('policy_net_loss', 'AVG_LOSS', 'float'),
+            ('epsilon', 'EPS', 'float')
         ],
         'eval': [
             ('step', 'S', 'int'),
