@@ -1,7 +1,11 @@
+from typing import Optional
+
 import numpy as np
 import torch as T
+
 from deep_q_network import DeepQNetwork
 from replay_memory import ReplayBuffer
+from logger import Logger
 
 
 class DQNAgent(object):
@@ -100,9 +104,9 @@ class DQNAgent(object):
         self.q_eval.load_checkpoint()
         self.q_next.load_checkpoint()
 
-    def optimise_agent(self):
+    def optimise_agent(self) -> Optional[T.Tensor]:
         if self.buffer.mem_cntr < self.batch_size:
-            return
+            return None
 
         self.q_eval.optimizer.zero_grad()
 
@@ -121,4 +125,8 @@ class DQNAgent(object):
         loss.backward()
         self.q_eval.optimizer.step()
         self.learn_step_counter += 1
+
+        return loss
+
+
 
