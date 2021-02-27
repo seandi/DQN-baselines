@@ -106,6 +106,12 @@ class Trainer:
                 self.logger.log(key='train/episode', value=self.episode, step=self.interaction_steps)
                 self.logger.log(key='train/episode_reward', value=episode_reward, step=self.interaction_steps)
                 self.logger.log(key='train/duration', value=duration, step=self.interaction_steps)
+
+                history_len = int(min(100, len(self.train_history)))
+                reward_mov_avg = [episode[1] for episode in self.train_history[-history_len:]]
+                reward_mov_avg = float(np.mean(reward_mov_avg))
+                self.logger.log(key='train/reward_avg_last_100', value=reward_mov_avg, step=self.interaction_steps)
+
                 self.logger.dump(step=self.interaction_steps)
 
                 if eval_on_episode_end:

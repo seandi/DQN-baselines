@@ -12,7 +12,8 @@ FORMAT_CONFIG = {
     'rl': {
         'train': [
             ('episode', 'E', 'int'), ('step', 'S', 'int'),
-            ('duration', 'D', 'time'), ('episode_reward', 'R', 'float'),
+            ('duration', 'D', 'time'),
+            ('episode_reward', 'R', 'float'), ('reward_avg_last_100', 'R-100', 'float'),
             ('policy_net_loss', 'AVG_LOSS', 'float'),
             ('epsilon', 'EPS', 'float')
         ],
