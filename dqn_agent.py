@@ -21,7 +21,7 @@ class DQNAgent(object):
             replace=1000,
             algo=None,
             env_name=None,
-            models_dir: Optional[str] = None
+            models_dir: Optional[str] = None,
     ):
         assert models_dir is not None, "No directory where to save the models was given!"
 
@@ -42,13 +42,16 @@ class DQNAgent(object):
 
         self.buffer = ReplayBuffer(buffer_size, input_dims, n_actions)
 
-        self.q_eval = DeepQNetwork(self.lr, self.n_actions,
+        self.q_eval = DeepQNetwork(self.n_actions,
                                    input_dims=self.input_dims,
                                    )
 
-        self.q_next = DeepQNetwork(self.lr, self.n_actions,
+        self.q_next = DeepQNetwork(self.n_actions,
                                    input_dims=self.input_dims,
                                    )
+
+        self.loss = T.nn.MSELoss()
+        self.optimizer = T.optim.Adam(self.q_eval.parameters(), lr=self.lr)
 
     def predict_action(self, observation):
         state = T.tensor([observation], dtype=T.float).to(self.q_eval.device)
@@ -80,7 +83,7 @@ class DQNAgent(object):
         if self.buffer.mem_cntr < self.batch_size:
             return None
 
-        self.q_eval.optimizer.zero_grad()
+        self.optimizer.zero_grad()
 
         self.replace_target_network()
 
@@ -93,12 +96,12 @@ class DQNAgent(object):
         q_next[dones] = 0.0
         q_target = rewards + self.gamma * q_next
 
-        loss = self.q_eval.loss(q_target, q_pred).to(self.q_eval.device)
-        loss.backward()
-        self.q_eval.optimizer.step()
+        loss_t = self.loss(q_target, q_pred).to(self.q_eval.device)
+        loss_t.backward()
+        self.optimizer.step()
         self.learn_step_counter += 1
 
-        return loss
+        return loss_t
 
     def save_models(self, train_steps: int):
         checkpoint_dir = os.path.join(self.models_dir, str(train_steps))

@@ -1,6 +1,3 @@
-import os
-from typing import List
-
 
 import torch as T
 import torch.nn as nn
@@ -10,7 +7,7 @@ import numpy as np
 
 
 class DeepQNetwork(nn.Module):
-    def __init__(self, lr, n_actions, input_dims):
+    def __init__(self, n_actions, input_dims):
         super(DeepQNetwork, self).__init__()
 
         self.conv1 = nn.Conv2d(input_dims[0], 32, 8, stride=4)
@@ -21,10 +18,6 @@ class DeepQNetwork(nn.Module):
 
         self.fc1 = nn.Linear(fc_input_dims, 512)
         self.fc2 = nn.Linear(512, n_actions)
-
-        self.optimizer = optim.RMSprop(self.parameters(), lr=lr)
-
-        self.loss = nn.MSELoss()
 
         self.device = T.device('cuda:0' if T.cuda.is_available() else 'cpu')
         self.to(self.device)
