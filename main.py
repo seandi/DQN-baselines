@@ -22,6 +22,7 @@ if __name__ == '__main__':
 
     trainer = Trainer(
         env=env, agent=agent, replay_buffer=replay_buffer, logger=logger,
+        epsilon_scheduler=epsilon_scheduler,
         max_interaction_steps=1000000
     )
 
