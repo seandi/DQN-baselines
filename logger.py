@@ -17,8 +17,10 @@ FORMAT_CONFIG = {
             ('epsilon', 'EPS', 'float')
         ],
         'eval': [
-            ('step', 'S', 'int'),
-            ('episode_reward', 'ER', 'float')
+            ('max_reward', 'MAX_R', 'float'),
+            ('mean_reward', 'AVG_R', 'float'),
+            ('std_reward', 'STD_R', 'float'),
+            ('duration', 'D', 'time')
         ]
     }
 }

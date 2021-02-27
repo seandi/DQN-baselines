@@ -8,7 +8,6 @@ from epsilon_scheduler import EpsilonScheduler
 
 if __name__ == '__main__':
     env_name = 'PongNoFrameskip-v4'
-    model_checkpoint_freq: int = 25000
 
     env = make_env(env_name)
 
@@ -31,7 +30,8 @@ if __name__ == '__main__':
     trainer = Trainer(
         env=env, agent=agent, replay_buffer=replay_buffer, logger=logger,
         epsilon_scheduler=epsilon_scheduler,
-        max_interaction_steps=1000000, save_models_interval=model_checkpoint_freq
+        max_interaction_steps=1000000, save_models_interval=100000,
+        eval_interval=None, eval_episodes=30, eval_epsilon=0.02
     )
 
     trainer.train()
