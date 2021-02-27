@@ -1,12 +1,14 @@
 from dqn_agent import DQNAgent
 from trainer import Trainer
-from utils import make_env
+from environmentt import make_env
+from utils import make_dirs
 from logger import Logger
 from epsilon_scheduler import EpsilonScheduler
 
 
 if __name__ == '__main__':
-    env = make_env('PongNoFrameskip-v4')
+    env_name = 'PongNoFrameskip-v4'
+    env = make_env(env_name)
 
     agent = DQNAgent(
         input_dims=(env.observation_space.shape), n_actions=env.action_space.n,
@@ -18,6 +20,11 @@ if __name__ == '__main__':
                                          epsilon_decay_factor=0.999985, schedule='exponential'
                                          )
     replay_buffer = agent.buffer
+
+    run_name = agent.__class__.__name__+"-"+env_name+"-"
+    log_dir = make_dirs('runs', run_name, add_run_time=True)
+    exit()
+
     logger = Logger(log_dir='./runs/test', use_tensorboard=True)
 
     trainer = Trainer(
