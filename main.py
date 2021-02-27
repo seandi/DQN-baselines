@@ -8,12 +8,17 @@ from epsilon_scheduler import EpsilonScheduler
 
 if __name__ == '__main__':
     env_name = 'PongNoFrameskip-v4'
+    model_checkpoint_freq: int = 25000
+
     env = make_env(env_name)
+
+    run_name = DQNAgent.__name__ + "-" + env_name + "-"
+    log_dir, models_dir = make_dirs('runs', run_name, add_run_time=True)
 
     agent = DQNAgent(
         input_dims=(env.observation_space.shape), n_actions=env.action_space.n,
         gamma=0.99, lr=0.0001, batch_size=32, replace=1000, buffer_size=10000,
-        chkpt_dir='models/', algo='DQNAgent', env_name='PongNoFrameskip-v4'
+        models_dir=models_dir, algo='DQNAgent', env_name='PongNoFrameskip-v4'
     )
 
     epsilon_scheduler = EpsilonScheduler(epsilon_start=1.0, epsilon_min=0.02,
@@ -21,16 +26,12 @@ if __name__ == '__main__':
                                          )
     replay_buffer = agent.buffer
 
-    run_name = agent.__class__.__name__+"-"+env_name+"-"
-    log_dir = make_dirs('runs', run_name, add_run_time=True)
-    exit()
-
-    logger = Logger(log_dir='./runs/test', use_tensorboard=True)
+    logger = Logger(log_dir=log_dir, use_tensorboard=True)
 
     trainer = Trainer(
         env=env, agent=agent, replay_buffer=replay_buffer, logger=logger,
         epsilon_scheduler=epsilon_scheduler,
-        max_interaction_steps=1000000
+        max_interaction_steps=1000000, save_models_interval=model_checkpoint_freq
     )
 
     trainer.train()

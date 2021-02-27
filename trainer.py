@@ -11,6 +11,7 @@ from epsilon_scheduler import EpsilonScheduler
 
 
 class Trainer:
+
     def __init__(
             self,
             env: Env,
@@ -20,8 +21,8 @@ class Trainer:
             logger: Logger,
             max_interaction_steps: int = 1e6,
             max_episodes: Optional[int] = None,
+            save_models_interval: Optional[int] = None # measured in train steps
     ):
-
         self.env = env
         self.agent: DQNAgent = agent
         self.replay_buffer = replay_buffer
@@ -30,6 +31,7 @@ class Trainer:
 
         self.max_steps: float = float(max_interaction_steps) if max_interaction_steps is not None else float('inf')
         self.max_episodes: float = float(max_episodes) if max_episodes is not None else float('inf')
+        self.model_checkpoint_freq = save_models_interval if save_models_interval is not None else int(1e6)
 
         self.episode: int = 0
         self.interaction_steps: int = 0
@@ -80,6 +82,9 @@ class Trainer:
             if loss is not None:
                 self.logger.log(key='train/policy_net_loss', value=loss,step=self.interaction_steps)
 
+            if self.train_steps % self.model_checkpoint_freq == 0:
+                self.agent.save_models(self.train_steps)
+
             #4. Complete interaction step
             if done:
                 self.episode += 1
@@ -99,6 +104,7 @@ class Trainer:
             else:
                 last_observation = observation
 
+        self.agent.save_models(train_steps=self.train_steps+1)
         return self.train_history
 
 

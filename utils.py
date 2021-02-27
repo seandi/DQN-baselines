@@ -2,11 +2,12 @@
 import os
 import datetime
 import matplotlib.pyplot as plt
+from typing import Tuple
 
 import numpy as np
 
 
-def make_dirs(root_dir_name: str, log_dir_name: str, add_run_time: bool=True):
+def make_dirs(root_dir_name: str, log_dir_name: str, add_run_time: bool = True) -> Tuple[str, str]:
     path = os.path.curdir
     root_dir = os.path.join(path, root_dir_name)
     if not os.path.exists(root_dir):
@@ -24,7 +25,10 @@ def make_dirs(root_dir_name: str, log_dir_name: str, add_run_time: bool=True):
         assert not os.listdir(log_dir),\
             "Cannot setup log directory since {0} already exists and is not empty!".format(log_dir)
 
+    model_dir = os.path.join(log_dir, 'models')
+    os.mkdir(model_dir)
 
+    return log_dir, model_dir
 
 
 def plot_learning_curve(x, scores, epsilons, filename, lines=None):
@@ -56,5 +60,6 @@ def plot_learning_curve(x, scores, epsilons, filename, lines=None):
 
     plt.savefig(filename)
 
+
 if __name__ == '__main__':
-    make_dirs('runs','test_log')
+    make_dirs('runs', 'test_log')

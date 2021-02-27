@@ -1,4 +1,5 @@
 from typing import Optional
+import os
 
 import numpy as np
 import torch as T
@@ -20,8 +21,9 @@ class DQNAgent(object):
             replace=1000,
             algo=None,
             env_name=None,
-            chkpt_dir='tmp/dqn'
+            models_dir: Optional[str] = None
     ):
+        assert models_dir is not None, "No directory where to save the models was given!"
 
         self.gamma = gamma
         self.n_actions = n_actions
@@ -29,14 +31,12 @@ class DQNAgent(object):
         self.batch_size = batch_size
         self.lr = lr
 
-        #self.epsilon = epsilon
-        #self.eps_min = eps_min
-        #self.eps_dec = eps_dec
         self.replace_target_cnt = replace
         self.algo = algo
         self.env_name = env_name
 
-        self.chkpt_dir = chkpt_dir
+        self.models_dir = models_dir
+
         self.action_space = [i for i in range(n_actions)]
         self.learn_step_counter = 0
 
@@ -44,13 +44,11 @@ class DQNAgent(object):
 
         self.q_eval = DeepQNetwork(self.lr, self.n_actions,
                                    input_dims=self.input_dims,
-                                   name=self.env_name + '_' + self.algo + '_q_eval',
-                                   chkpt_dir=self.chkpt_dir)
+                                   )
 
         self.q_next = DeepQNetwork(self.lr, self.n_actions,
                                    input_dims=self.input_dims,
-                                   name=self.env_name + '_' + self.algo + '_q_next',
-                                   chkpt_dir=self.chkpt_dir)
+                                   )
 
     def predict_action(self, observation):
         state = T.tensor([observation], dtype=T.float).to(self.q_eval.device)
@@ -58,18 +56,6 @@ class DQNAgent(object):
         action = T.argmax(actions).item()
 
         return action
-
-    """
-    def choose_action(self, observation):
-        if np.random.random() > self.epsilon:
-            state = T.tensor([observation], dtype=T.float).to(self.q_eval.device)
-            actions = self.q_eval.forward(state)
-            action = T.argmax(actions).item()
-        else:
-            action = np.random.choice(self.action_space)
-
-        return action
-    """
 
     def store_transition(self, state, action, reward, next_state, done):
         self.buffer.store_transition(state, action, reward, next_state, done)
@@ -89,20 +75,6 @@ class DQNAgent(object):
     def replace_target_network(self):
         if self.learn_step_counter % self.replace_target_cnt == 0:
             self.q_next.load_state_dict(self.q_eval.state_dict())
-
-    """
-    def decrement_epsilon(self):
-        self.epsilon = self.epsilon - self.eps_dec \
-            if self.epsilon > self.eps_min else self.eps_min
-    """
-
-    def save_models(self):
-        self.q_eval.save_checkpoint()
-        self.q_next.save_checkpoint()
-
-    def load_models(self):
-        self.q_eval.load_checkpoint()
-        self.q_next.load_checkpoint()
 
     def optimise_agent(self) -> Optional[T.Tensor]:
         if self.buffer.mem_cntr < self.batch_size:
@@ -127,6 +99,18 @@ class DQNAgent(object):
         self.learn_step_counter += 1
 
         return loss
+
+    def save_models(self, train_steps: int):
+        checkpoint_dir = os.path.join(self.models_dir, str(train_steps))
+        os.mkdir(checkpoint_dir)
+        print("Creating models checkpoint in {0}".format(checkpoint_dir))
+
+        self.q_eval.save_checkpoint(file_name=os.path.join(checkpoint_dir, "q_eval"))
+        self.q_next.save_checkpoint(file_name=os.path.join(checkpoint_dir, "q_next"))
+
+    def load_models(self, model_dir):
+        self.q_eval.load_checkpoint(os.path.join(model_dir, 'q_eval'))
+        self.q_next.load_checkpoint(os.path.join(model_dir, 'q_next'))
 
 
 
