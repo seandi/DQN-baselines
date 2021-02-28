@@ -19,9 +19,6 @@ class DeepQNetwork(nn.Module):
         self.fc1 = nn.Linear(fc_input_dims, 512)
         self.fc2 = nn.Linear(512, n_actions)
 
-        self.device = T.device('cuda:0' if T.cuda.is_available() else 'cpu')
-        self.to(self.device)
-
     def calculate_conv_output_dims(self, input_dims):
         state = T.zeros(1, *input_dims)
         dims = self.conv1(state)

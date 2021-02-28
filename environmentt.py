@@ -1,8 +1,10 @@
 import collections
+from typing import Tuple
 
 import cv2
 import numpy as np
 import gym
+from gym.spaces import Space, Box, Discrete
 
 
 class RepeatActionAndMaxFrame(gym.Wrapper):
@@ -96,3 +98,19 @@ def make_env(env_name, shape=(84,84,1), repeat=4, clip_rewards=False,
     env = StackFrames(env, repeat)
 
     return env
+
+
+def get_observation_shape(observation_space: Space) -> Tuple[int, ...]:
+    if isinstance(observation_space, Box):
+        return observation_space.shape
+    elif isinstance(observation_space, Discrete):
+        return (1,)
+    else:
+        raise NotImplementedError(f"{observation_space} observation space is not supported yet!")
+
+
+def get_num_action(action_space: Space) -> int:
+    if isinstance(action_space, Discrete):
+        return int(action_space.n)
+    else:
+        raise NotImplementedError(f"{action_space} action space not supported yet!")
