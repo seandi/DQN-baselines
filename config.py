@@ -1,5 +1,5 @@
 from configparser import ConfigParser
-from typing import Optional
+from typing import Optional, List
 import dataclasses
 
 DASHED_LINE = "-------------------------------------------------------------\n"
@@ -35,6 +35,8 @@ class ConfigDict:
     buffer_size: int
     optimizer: str
     update_target_net_params: int
+    model: str
+    net_arch: Optional[List[int]]
 
     def __init__(self, config_file: str) -> None:
         parser: ConfigParser = ConfigParser()
@@ -76,6 +78,14 @@ class ConfigDict:
         self.update_target_net_params = int(parser.get('AGENT', 'update_target_net_params'))
         self.optimizer = str(parser.get('AGENT', 'optimizer'))
 
+        self.model = str(parser.get('AGENT', 'model'))
+        t = parser.get('AGENT', 'net_arch').strip('[]')
+        if t == 'None':
+            self.net_arch = None
+        else:
+            net_arch_str: str = t
+            self.net_arch = [int(layer_dim) for layer_dim in net_arch_str.split(', ')]
+
     def generate_summary(self, save_to_file: Optional[str]=None) -> str:
         config_dict = self.__dict__
         longest_param_name = max([len(param) for param in config_dict.keys()])
@@ -94,6 +104,6 @@ class ConfigDict:
 
 
 if __name__ == '__main__':
-    c = ConfigDict(config_file='configs/config_atari_dqn.ini')
+    c = ConfigDict(config_file='configs/config_cartpole_dqn.ini')
     summary = c.generate_summary(save_to_file='./parameters.txt')
     print(summary)

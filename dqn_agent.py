@@ -1,16 +1,20 @@
-from typing import Optional
+from typing import Optional, List
 import os
 
 import numpy as np
 import torch as T
 from gym import Env
 
-from deep_q_network import DeepQNetwork
+from deep_q_network import DeepQNetwork, MLP_DQN
 from replay_memory import ReplayBuffer
 from environmentt import get_num_action, get_observation_shape
 
 
 class DQNAgent(object):
+    supported_models = {
+        'DeepQNetwork': DeepQNetwork,
+        'MLP_DQN': MLP_DQN
+    }
     def __init__(
             self,
             device: T.device,
@@ -21,9 +25,12 @@ class DQNAgent(object):
             batch_size: int,
             # Measured in TRAIN steps, hyper-param are usually wrt INTERACTION steps
             sync_target_net_every_n_train_steps: int,
+            model: str,
             models_dir: Optional[str] = None,
+            net_arch: Optional[List[int]] = None
     ):
         assert models_dir is not None, "No directory where to save the models was given!"
+        assert model == 'DeepQNetwork' or model == 'MLP_DQN', f"{model} model is not supported"
 
         # 1. Store hyper-parameters
         self.gamma = gamma
@@ -41,8 +48,12 @@ class DQNAgent(object):
 
         self.buffer = ReplayBuffer(buffer_size, input_shape=input_shape, n_actions=num_actions)
 
-        self.policy_net = DeepQNetwork(input_dims=input_shape, n_actions=num_actions).to(self.device)
-        self.target_net = DeepQNetwork(input_dims=input_shape, n_actions=num_actions).to(self.device)
+        if model == 'DeepQNetwork':
+            net_arch = None
+        network = DQNAgent.supported_models[model]
+
+        self.policy_net = network(input_dims=input_shape, n_actions=num_actions, net_arch=net_arch).to(self.device)
+        self.target_net = network(input_dims=input_shape, n_actions=num_actions, net_arch=net_arch).to(self.device)
         self.update_target_network()
 
         self.loss = T.nn.MSELoss()

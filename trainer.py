@@ -23,6 +23,7 @@ class Trainer:
             max_interaction_steps: int,
             max_episodes: Optional[int],
             train_freq: int,
+            train_start: int,
             save_models_interval: Optional[int],  # measured in train steps
             eval_interval: Optional[int],
             eval_episodes: int = 30,
@@ -40,6 +41,7 @@ class Trainer:
         self.max_episodes: float = float(max_episodes) if max_episodes is not None else float('inf')
         self.model_checkpoint_freq = save_models_interval if save_models_interval is not None else int(1e6)
         self.train_freq = train_freq
+        self.train_start = train_start
 
         # Evaluate every this number of interactions (after current episode ends)
         self.eval_interval = eval_interval if eval_interval is not None else int(1e9)
@@ -93,37 +95,40 @@ class Trainer:
             )
 
             # 3. Optimise agent
-            self.train_steps += 1
-            loss = self.agent.optimise_agent()
-            if loss is not None:
-                self.logger.log(key='train/policy_net_loss', value=loss, step=self.interaction_steps)
+            if self.interaction_steps > self.train_start:
+                self.train_steps += 1
+                loss = self.agent.optimise_agent()
+                if loss is not None:
+                    self.logger.log(key='train/policy_net_loss', value=loss, step=self.interaction_steps)
 
-            if self.train_steps % self.model_checkpoint_freq == 0:
-                self.agent.save_models(self.train_steps)
+                if self.train_steps % self.model_checkpoint_freq == 0:
+                    self.agent.save_models(self.train_steps)
 
             # 4. Complete interaction step
             if done:
                 self.episode += 1
                 duration = time.time() - episode_start_time
-                self.train_history.append((episode_steps, episode_reward))
 
-                self.logger.log(key='train/episode', value=self.episode, step=self.interaction_steps)
-                self.logger.log(key='train/episode_reward', value=episode_reward, step=self.interaction_steps)
-                self.logger.log(key='train/duration', value=duration, step=self.interaction_steps)
+                if self.interaction_steps > self.train_start:
+                    self.train_history.append((episode_steps, episode_reward))
 
-                history_len = int(min(100, len(self.train_history)))
-                reward_mov_avg = [episode[1] for episode in self.train_history[-history_len:]]
-                reward_mov_avg = float(np.mean(reward_mov_avg))
-                self.logger.log(key='train/reward_avg_last_100', value=reward_mov_avg, step=self.interaction_steps)
+                    self.logger.log(key='train/episode', value=self.episode, step=self.interaction_steps)
+                    self.logger.log(key='train/episode_reward', value=episode_reward, step=self.interaction_steps)
+                    self.logger.log(key='train/duration', value=duration, step=self.interaction_steps)
 
-                self.logger.dump(step=self.interaction_steps)
+                    history_len = int(min(100, len(self.train_history)))
+                    reward_mov_avg = [episode[1] for episode in self.train_history[-history_len:]]
+                    reward_mov_avg = float(np.mean(reward_mov_avg))
+                    self.logger.log(key='train/reward_avg_last_100', value=reward_mov_avg, step=self.interaction_steps)
 
-                if eval_on_episode_end:
-                    evaluate(env=self.env, agent=self.agent, logger=self.logger,
-                             step=self.interaction_steps, eval_episodes=self.eval_episodes,
-                             epsilon=self.eval_epsilon
-                             )
-                    eval_on_episode_end = False
+                    self.logger.dump(step=self.interaction_steps)
+
+                    if eval_on_episode_end:
+                        evaluate(env=self.env, agent=self.agent, logger=self.logger,
+                                 step=self.interaction_steps, eval_episodes=self.eval_episodes,
+                                 epsilon=self.eval_epsilon
+                                 )
+                        eval_on_episode_end = False
 
                 # start new episode
                 episode_reward = 0.0
