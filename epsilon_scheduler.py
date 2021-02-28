@@ -12,6 +12,7 @@ class EpsilonScheduler:
                  epsilon_decay_factor: Optional[float] = None,
                  schedule: str = 'exponential'
                  ):
+
         assert schedule in EpsilonScheduler.SCHEDULERS, 'invalid scheduler type, choose either "linear" or "exponential"'
 
         self.schedule = schedule
@@ -20,9 +21,9 @@ class EpsilonScheduler:
 
         self.epsilon = self.epsilon_start
 
-        if schedule is EpsilonScheduler.SCHEDULERS[0]:
+        if schedule == EpsilonScheduler.SCHEDULERS[0]:
             self.eps_step = (epsilon_start - epsilon_min) / epsilon_decay_period
-        elif schedule is EpsilonScheduler.SCHEDULERS[1]:
+        elif schedule == EpsilonScheduler.SCHEDULERS[1]:
             self.epsilon_decay_factor = epsilon_decay_factor
 
     def step(self) -> float:
@@ -35,10 +36,12 @@ class EpsilonScheduler:
             return self.epsilon
 
         old_eps = self.epsilon
-        if self.schedule is EpsilonScheduler.SCHEDULERS[0]:
+        if self.schedule == EpsilonScheduler.SCHEDULERS[0]:
             self.epsilon -= self.eps_step
-        elif self.schedule is EpsilonScheduler.SCHEDULERS[1]:
+        elif self.schedule == EpsilonScheduler.SCHEDULERS[1]:
             self.epsilon *= self.epsilon_decay_factor
+        else:
+            raise NotImplementedError(f"{self.schedule} schedule type not supported yet!")
 
         return old_eps
 
