@@ -1,27 +1,41 @@
+import torch as th
+
 from dqn_agent import DQNAgent
 from trainer import Trainer
 from environmentt import make_env
 from utils import make_dirs
 from logger import Logger
 from epsilon_scheduler import EpsilonScheduler
+from config import ConfigDict
 
 
 if __name__ == '__main__':
     env_name = 'PongNoFrameskip-v4'
+    config_filename = './configs/config_atari_dqn.ini'
 
+    config = ConfigDict(config_file=config_filename)
+
+    device = th.device("cuda" if th.cuda.is_available() and not config.disable_cuda else "cpu")
+    device_name: str = th.cuda.get_device_name(device) if device.type == 'cuda' else 'cpu'
+    config.device_name = device_name
+    print(f"Device: {device_name}")
+    print(config)
     env = make_env(env_name)
 
     run_name = DQNAgent.__name__ + "-" + env_name + "-"
     log_dir, models_dir = make_dirs('runs', run_name, add_run_time=True)
 
     agent = DQNAgent(
-        input_dims=(env.observation_space.shape), n_actions=env.action_space.n,
-        gamma=0.99, lr=0.0001, batch_size=32, replace=1000, buffer_size=10000,
-        models_dir=models_dir, algo='DQNAgent', env_name='PongNoFrameskip-v4'
+        device=device, env=env,
+        gamma=config.gamma, learning_rate=config.learning_rate, batch_size=config.batch_size,
+        sync_target_net_every_n_train_steps=config.update_target_net_params//config.train_agent_frequency,
+        buffer_size=config.buffer_size,
+        models_dir=models_dir
     )
 
-    epsilon_scheduler = EpsilonScheduler(epsilon_start=1.0, epsilon_min=0.02,
-                                         epsilon_decay_factor=0.999985, schedule='exponential'
+    epsilon_scheduler = EpsilonScheduler(epsilon_start=config.epsilon_start, epsilon_min=config.epsilon_min,
+                                         epsilon_decay_factor=config.epsilon_decay_factor,
+                                         schedule=config.epsilon_scheduler
                                          )
     replay_buffer = agent.buffer
 
@@ -30,8 +44,9 @@ if __name__ == '__main__':
     trainer = Trainer(
         env=env, agent=agent, replay_buffer=replay_buffer, logger=logger,
         epsilon_scheduler=epsilon_scheduler,
-        max_interaction_steps=1000000, save_models_interval=100000,
-        eval_interval=None, eval_episodes=30, eval_epsilon=0.02
+        max_interaction_steps=config.interaction_steps, max_episodes=config.max_episodes,
+        save_models_interval=config.save_model_interval, train_freq=config.train_agent_frequency,
+        eval_interval=None, eval_episodes=config.eval_episodes, eval_epsilon=config.eval_epsilon
     )
 
     trainer.train()

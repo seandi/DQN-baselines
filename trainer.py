@@ -20,13 +20,16 @@ class Trainer:
             replay_buffer: ReplayBuffer,
             epsilon_scheduler: EpsilonScheduler,
             logger: Logger,
-            max_interaction_steps: int = 1e6,
-            max_episodes: Optional[int] = None,
-            save_models_interval: Optional[int] = None,  # measured in train steps
-            eval_interval: Optional[int] = None,
+            max_interaction_steps: int,
+            max_episodes: Optional[int],
+            train_freq: int,
+            save_models_interval: Optional[int],  # measured in train steps
+            eval_interval: Optional[int],
             eval_episodes: int = 30,
             eval_epsilon: Optional[float] = None
     ):
+        assert train_freq == 1, "Training frequencies different from 1 not supported yet!"
+
         self.env = env
         self.agent: DQNAgent = agent
         self.replay_buffer = replay_buffer
@@ -36,6 +39,7 @@ class Trainer:
         self.max_steps: float = float(max_interaction_steps) if max_interaction_steps is not None else float('inf')
         self.max_episodes: float = float(max_episodes) if max_episodes is not None else float('inf')
         self.model_checkpoint_freq = save_models_interval if save_models_interval is not None else int(1e6)
+        self.train_freq = train_freq
 
         # Evaluate every this number of interactions (after current episode ends)
         self.eval_interval = eval_interval if eval_interval is not None else int(1e9)
