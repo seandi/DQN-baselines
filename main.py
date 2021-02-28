@@ -1,4 +1,5 @@
 import torch as th
+import os
 
 from dqn_agent import DQNAgent
 from trainer import Trainer
@@ -18,12 +19,14 @@ if __name__ == '__main__':
     device = th.device("cuda" if th.cuda.is_available() and not config.disable_cuda else "cpu")
     device_name: str = th.cuda.get_device_name(device) if device.type == 'cuda' else 'cpu'
     config.device_name = device_name
-    print(f"Device: {device_name}")
-    print(config)
+
     env = make_env(env_name)
 
     run_name = DQNAgent.__name__ + "-" + env_name + "-"
     log_dir, models_dir = make_dirs('runs', run_name, add_run_time=True)
+
+    summary = config.generate_summary(save_to_file=os.path.join(log_dir, 'params.txt'))
+    print(summary)
 
     agent = DQNAgent(
         device=device, env=env,

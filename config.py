@@ -2,6 +2,10 @@ from configparser import ConfigParser
 from typing import Optional
 import dataclasses
 
+DASHED_LINE = "-------------------------------------------------------------\n"
+SUMMARY_HEADER = DASHED_LINE + \
+                 "            HYPER-PARAMETERS CONFIGURATION                   \n" \
+                 + DASHED_LINE
 
 @dataclasses.dataclass
 class ConfigDict:
@@ -72,7 +76,24 @@ class ConfigDict:
         self.update_target_net_params = int(parser.get('AGENT', 'update_target_net_params'))
         self.optimizer = str(parser.get('AGENT', 'optimizer'))
 
+    def generate_summary(self, save_to_file: Optional[str]=None) -> str:
+        config_dict = self.__dict__
+        longest_param_name = max([len(param) for param in config_dict.keys()])
+
+        summary_lines = []
+        for param in config_dict:
+            summary_lines.append("{0:<{2}}: {1}\n".format(param, config_dict[param], longest_param_name + 2))
+        summary_string = SUMMARY_HEADER + "".join(summary_lines) + DASHED_LINE
+
+        if save_to_file is not None:
+            with open(save_to_file, 'w') as file:
+                file.write(summary_string)
+                file.flush()
+
+        return summary_string
+
 
 if __name__ == '__main__':
     c = ConfigDict(config_file='configs/config_atari_dqn.ini')
-    print(c.__dict__)
+    summary = c.generate_summary(save_to_file='./parameters.txt')
+    print(summary)
