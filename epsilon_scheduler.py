@@ -6,11 +6,11 @@ class EpsilonScheduler:
     SCHEDULERS = ['linear', 'exponential']
 
     def __init__(self,
-                 epsilon_start: float = 1.0,
-                 epsilon_min: float = 0.1,
-                 epsilon_decay_period: Optional[int] = int(2e5),
-                 epsilon_decay_factor: Optional[float] = None,
-                 schedule: str = 'exponential'
+                 epsilon_start: float,
+                 epsilon_min: float,
+                 schedule: str,
+                 epsilon_decay_period: Optional[int] = None,
+                 epsilon_decay_factor: Optional[float] = None
                  ):
 
         assert schedule in EpsilonScheduler.SCHEDULERS, 'invalid scheduler type, choose either "linear" or "exponential"'

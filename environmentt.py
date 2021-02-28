@@ -53,6 +53,7 @@ class RepeatActionAndMaxFrame(gym.Wrapper):
         self.frame_buffer[0] = obs
         return obs
 
+
 class PreprocessFrame(gym.ObservationWrapper):
     def __init__(self, shape, env=None):
         super(PreprocessFrame, self).__init__(env)
@@ -66,6 +67,7 @@ class PreprocessFrame(gym.ObservationWrapper):
         new_obs = np.array(resized_screen, dtype=np.uint8).reshape(self.shape)
         new_obs = new_obs / 255.0
         return new_obs
+
 
 class StackFrames(gym.ObservationWrapper):
     def __init__(self, env, repeat):
@@ -90,8 +92,9 @@ class StackFrames(gym.ObservationWrapper):
 
         return obs
 
-def make_env(env_name, shape=(84,84,1), repeat=4, clip_rewards=False,
-             no_ops=0, fire_first=False):
+
+def make_atari_env(env_name, shape=(84, 84, 1), repeat=4, clip_rewards=False,
+                   no_ops=0, fire_first=False):
     env = gym.make(env_name)
     env = RepeatActionAndMaxFrame(env, repeat, clip_rewards, no_ops, fire_first)
     env = PreprocessFrame(shape, env)
