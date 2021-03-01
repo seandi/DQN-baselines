@@ -1,4 +1,5 @@
 import torch as th
+import gym
 import os
 
 from dqn_agent import DQNAgent
@@ -9,10 +10,20 @@ from logger import Logger
 from epsilon_scheduler import EpsilonScheduler
 from config import ConfigDict
 
+from argparse import ArgumentParser
+
 
 if __name__ == '__main__':
-    env_name = 'PongNoFrameskip-v4'
-    config_filename = './configs/config_atari_dqn.ini'
+    parser = ArgumentParser()
+    parser.add_argument('--env', default='PongNoFrameskip-v4',
+                        help="Name of the gym environment to solve")
+    parser.add_argument('--config', default='./configs/config_atari_dqn.ini',
+                        help="Config file containing the hyper-params")
+    parser.add_argument('--atari', default=True, help="Is the env an Atari env")
+    args = parser.parse_args()
+
+    env_name = args.env
+    config_filename = args.config
 
     config = ConfigDict(config_file=config_filename)
 
@@ -20,7 +31,7 @@ if __name__ == '__main__':
     device_name: str = th.cuda.get_device_name(device) if device.type == 'cuda' else 'cpu'
     config.device_name = device_name
 
-    env = make_atari_env(env_name)
+    env = make_atari_env(env_name) if args.atari else gym.make(env_name)
 
     run_name = DQNAgent.__name__ + "-" + env_name + "-"
     log_dir, models_dir = make_dirs('runs', run_name, add_run_time=True)
@@ -38,6 +49,7 @@ if __name__ == '__main__':
 
     epsilon_scheduler = EpsilonScheduler(epsilon_start=config.epsilon_start, epsilon_min=config.epsilon_min,
                                          epsilon_decay_factor=config.epsilon_decay_factor,
+                                         epsilon_decay_period=config.epsilon_decay_period,
                                          schedule=config.epsilon_scheduler
                                          )
     replay_buffer = agent.buffer
